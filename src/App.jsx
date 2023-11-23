@@ -4,6 +4,7 @@ import CountryList from './components/CountryList';
 import { fetchCountries } from './services/restCountriesApi';
 
 const App = () => {
+  const [countries, setCountries] = useState([]);
   const [filteredCountries, setFilteredCountries] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -15,7 +16,15 @@ const App = () => {
     const fetchData = async () => {
       try {
         const countriesData = await fetchCountries();
-        setFilteredCountries(countriesData);
+        // Filtrer les données pour garantir que `capital` est une chaîne de caractères
+        const filtered = countriesData.map((country) => ({
+          flag: country.flag,
+          name: country.name,
+          capital: Array.isArray(country.capital) ? country.capital.join(', ') : country.capital,
+          region: country.region,
+        }));
+        setCountries(filtered);
+        setFilteredCountries(filtered);
       } catch (error) {
         console.error(error);
       }
@@ -25,21 +34,16 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    const filterCountries = async () => {
-      try {
-        const countriesData = await fetchCountries();
-        // Filtrer les pays en fonction du terme de recherche
-        const filtered = countriesData.filter((country) =>
-          country.region.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setFilteredCountries(filtered);
-      } catch (error) {
-        console.error(error);
-      }
+    const filterCountries = () => {
+      // Utiliser `countries` pour filtrer les données au lieu de `filteredCountries`
+      const filtered = countries.filter((country) =>
+        country.region.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredCountries(filtered);
     };
 
     filterCountries();
-  }, [searchTerm]);
+  }, [searchTerm, countries]);
 
   return (
     <div className="app">
