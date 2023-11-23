@@ -1,35 +1,53 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react';
+import SearchBar from './components/SearchBar';
+import CountryList from './components/CountryList';
+import { fetchCountries } from './services/restCountriesApi';
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  const [filteredCountries, setFilteredCountries] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const handleSearch = async (region) => {
+    setSearchTerm(region); // Mettre à jour le terme de recherche
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const countriesData = await fetchCountries();
+        setFilteredCountries(countriesData);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const filterCountries = async () => {
+      try {
+        const countriesData = await fetchCountries();
+        // Filtrer les pays en fonction du terme de recherche
+        const filtered = countriesData.filter((country) =>
+          country.region.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setFilteredCountries(filtered);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    filterCountries();
+  }, [searchTerm]);
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div className="app">
+      <h1>Country Explorer</h1>
+      <SearchBar handleSearch={handleSearch} />
+      <CountryList countries={filteredCountries} />
+    </div>
+  );
+};
 
-export default App
+export default App;
